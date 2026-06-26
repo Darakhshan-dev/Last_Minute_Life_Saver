@@ -1,0 +1,12 @@
+{
+  "name": "last-minute-life-saver-frontend",
+  "version": "1.0.0",
+  "private": true,
+  "dependencies": {
+    "firebase": "^12.15.0",
+    "lucide-react": "^0.546.0",
+    "motion": "^12.23.24",
+    "react": "^19.0.1",
+    "react-dom": "^19.0.1"
+  }
+}

@@ -1,0 +1,63 @@
+{
+  "entities": {
+    "Task": {
+      "title": "Task",
+      "description": "Represents a user deadline task or commitment",
+      "type": "object",
+      "properties": {
+        "userId": {
+          "type": "string",
+          "description": "The UID of the user who owns this task"
+        },
+        "title": {
+          "type": "string",
+          "description": "The task title"
+        },
+        "description": {
+          "type": "string",
+          "description": "The task description"
+        },
+        "deadline": {
+          "type": "string",
+          "format": "date-time",
+          "description": "The ISO deadline of the task"
+        },
+        "estimatedHours": {
+          "type": "number",
+          "description": "The estimated duration of the task in hours"
+        },
+        "category": {
+          "type": "string",
+          "enum": ["Assignment", "Bill", "Meeting", "Interview", "Commitment", "Other"],
+          "description": "The category of the task"
+        },
+        "priority": {
+          "type": "string",
+          "enum": ["High", "Medium", "Low"],
+          "description": "The task risk priority"
+        },
+        "completed": {
+          "type": "boolean",
+          "description": "Whether the task is completed"
+        },
+        "completedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Optional completion date-time"
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "The creation date-time"
+        }
+      },
+      "required": ["userId", "title", "deadline", "estimatedHours", "category", "priority", "completed", "createdAt"]
+    }
+  },
+  "firestore": {
+    "tasks/{taskId}": {
+      "schema": "Task",
+      "description": "Users tasks and deadlines to monitor"
+    }
+  }
+}
