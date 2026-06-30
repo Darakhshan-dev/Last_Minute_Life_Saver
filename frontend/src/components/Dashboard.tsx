@@ -62,6 +62,8 @@ export default function Dashboard() {
   const [freeWindows, setFreeWindows] = useState<any[]>([]);
   const [loadingCalendar, setLoadingCalendar] = useState(false);
   const [calendarError, setCalendarError] = useState<string | null>(null);
+  const [notifiedWindowKeys, setNotifiedWindowKeys] = useState<Set<string>>(new Set());
+const [notifiedTaskRiskLevels, setNotifiedTaskRiskLevels] = useState<Record<string, string>>({});
 
   // Diagnostics and Safe Debugging States
   const [showDiagnostics, setShowDiagnostics] = useState(false);
@@ -140,13 +142,84 @@ export default function Dashboard() {
   const [deleteConfirmationTaskId, setDeleteConfirmationTaskId] = useState<string | null>(null);
   const [toastNotification, setToastNotification] = useState<{ message: string; type: "success" | "error" | "info" } | null>(null);
 
-  // Update clock every second
+ // Update clock every second
   useEffect(() => {
     const timer = setInterval(() => {
       setCurrentTime(new Date().toLocaleTimeString());
     }, 1000);
     return () => clearInterval(timer);
   }, []);
+
+ // Request browser notification permission once, after the user is loaded
+useEffect(() => {
+  if (user && "Notification" in window && Notification.permission === "default") {
+    Notification.requestPermission();
+  }
+}, [user]);
+
+// Calendar-aware notifications: alert the user the moment a free work
+// window starts, suggesting the highest-priority task that fits in it.
+useEffect(() => {
+  if (!calendarConnected) return;
+  const checkFreeWindows = () => {
+    if (!("Notification" in window) || Notification.permission !== "granted") return;
+    const now = new Date();
+    freeWindows.forEach((win) => {
+      const startDate = new Date(win.start);
+      const msSinceStart = now.getTime() - startDate.getTime();
+      const justStarted = msSinceStart >= 0 && msSinceStart < 60 * 1000;
+      const key = win.start;
+      if (justStarted && !notifiedWindowKeys.has(key)) {
+        console.log("Current priorities at calendar-check time:", analysis.priorities);
+const fittingTasks = tasks.filter((t) => {
+  if (t.completed) return false;
+  if (t.estimatedHours > win.durationHours) return false;
+  if (new Date(t.deadline).getTime() < Date.now()) return false; // skip anything already overdue, checked directly — no dependency on AI analysis timing
+  return true;
+});
+        const bestTask = fittingTasks
+          .slice()
+          .sort((a, b) => {
+            const aScore = analysis.priorities.find((p) => p.taskId === a.id)?.score ?? 0;
+            const bScore = analysis.priorities.find((p) => p.taskId === b.id)?.score ?? 0;
+            return bScore - aScore;
+          })[0];
+        if (bestTask) {
+          new Notification("Free time available!", {
+            body: `You have ${win.durationHours}h free right now — good time to work on "${bestTask.title}".`,
+          });
+          setNotifiedWindowKeys((prev) => new Set(prev).add(key));
+        }
+      }
+    });
+  };
+  checkFreeWindows();
+  const intervalId = setInterval(checkFreeWindows, 60 * 1000);
+  return () => clearInterval(intervalId);
+}, [calendarConnected, freeWindows, tasks, analysis, notifiedWindowKeys]);
+
+// Deadline-aware notifications: alert the user when a task becomes
+// high-risk or overdue, based on Gemini's prioritization analysis.
+useEffect(() => {
+  if (!("Notification" in window) || Notification.permission !== "granted") return;
+  analysis.priorities.forEach((p) => {
+    const isRisky = p.riskStatus === "overdue" || p.riskStatus === "high_risk";
+    const lastNotifiedLevel = notifiedTaskRiskLevels[p.taskId];
+    const alreadyNotifiedAtThisLevel = lastNotifiedLevel === p.riskStatus;
+
+    if (isRisky && !alreadyNotifiedAtThisLevel) {
+      const task = tasks.find((t) => t.id === p.taskId);
+      if (task && !task.completed) {
+        const title =
+          p.riskStatus === "overdue" ? "Task overdue!" : "Deadline approaching!";
+        new Notification(title, {
+          body: `"${task.title}" — ${p.reason}`,
+        });
+        setNotifiedTaskRiskLevels((prev) => ({ ...prev, [p.taskId]: p.riskStatus }));
+      }
+    }
+  });
+}, [analysis, tasks, notifiedTaskRiskLevels]);
 
   // Auto-clear Toast
   useEffect(() => {
@@ -234,6 +307,82 @@ export default function Dashboard() {
 
     return () => clearTimeout(debounceId);
   }, [tasks]);
+   
+  useEffect(() => {
+  if (tasks.length === 0) {
+    setAnalysis({
+      priorities: [],
+      recommendation: null,
+      warnings: [],
+      insights: [],
+    });
+    return;
+  }
+
+  const triggerProactivePrioritization = async () => {
+    setAnalyzing(true);
+    try {
+      const response = await apiService.prioritize(new Date().toISOString());
+      if (response && !response.error) {
+        setAnalysis(response);
+      }
+    } catch (err) {
+      console.error("Proactive AI prioritization failed:", err);
+    } finally {
+      setAnalyzing(false);
+    }
+  };
+
+  const debounceId = setTimeout(() => {
+    triggerProactivePrioritization();
+  }, 1200);
+
+  return () => clearTimeout(debounceId);
+}, [tasks]);
+
+// 👇 PASTE THE NEW PERIODIC-CHECK EFFECT HERE 👇
+useEffect(() => {
+  const periodicCheck = setInterval(() => {
+    if (tasks.length === 0) return;
+    (async () => {
+      setAnalyzing(true);
+      try {
+        const response = await apiService.prioritize(new Date().toISOString());
+        if (response && !response.error) {
+          setAnalysis(response);
+        }
+      } catch (err) {
+        console.error("Periodic AI prioritization failed:", err);
+      } finally {
+        setAnalyzing(false);
+      }
+    })();
+  }, 5 * 60 * 1000);
+
+  return () => clearInterval(periodicCheck);
+}, [tasks]);
+
+useEffect(() => {
+  const periodicCheck = setInterval(() => {
+    if (tasks.length === 0) return;
+    (async () => {
+      setAnalyzing(true);
+      try {
+        const response = await apiService.prioritize(new Date().toISOString());
+        if (response && !response.error) {
+          setAnalysis(response);
+        }
+      } catch (err) {
+        console.error("Periodic AI prioritization failed:", err);
+      } finally {
+        setAnalyzing(false);
+      }
+    })();
+}, 60 * 1000);
+
+  return () => clearInterval(periodicCheck);
+}, [tasks]);
+
 
   // Handle tasks operations
   const handleAddTask = async (taskData: Omit<Task, "id" | "userId" | "completed" | "createdAt">) => {
@@ -984,18 +1133,22 @@ export default function Dashboard() {
                 {freeWindows.length === 0 ? (
                   <p className="text-[11px] text-neutral-500 italic py-2">No clear blocks available. High workload detected.</p>
                 ) : (
-                  freeWindows.slice(0, 3).map((win, idx) => {
-                    const startHr = new Date(win.start).getHours();
-                    const startMin = String(new Date(win.start).getMinutes()).padStart(2, "0");
-                    const endHr = new Date(win.end).getHours();
-                    const endMin = String(new Date(win.end).getMinutes()).padStart(2, "0");
-                    return (
-                      <div key={idx} className="bg-neutral-950 border border-neutral-850 p-2 rounded-lg flex justify-between items-center text-[10px] font-mono">
-                        <span className="text-neutral-300">{startHr}:{startMin} - {endHr}:{endMin}</span>
-                        <span className="text-emerald-400 font-bold bg-emerald-500/10 px-1.5 py-0.5 rounded">{win.durationHours}h Free</span>
-                      </div>
-                    );
-                  })
+               freeWindows.slice(0, 3).map((win, idx) => {
+  const startDate = new Date(win.start);
+  const endDate = new Date(win.end);
+  const sameDay = startDate.toDateString() === endDate.toDateString();
+  const fmtTime = (d: Date) => d.toLocaleTimeString(undefined, { hour: "2-digit", minute: "2-digit" });
+  const fmtDay = (d: Date) => d.toLocaleDateString(undefined, { weekday: "short" });
+  const label = sameDay
+    ? `${fmtTime(startDate)} - ${fmtTime(endDate)}`
+    : `${fmtDay(startDate)} ${fmtTime(startDate)} - ${fmtDay(endDate)} ${fmtTime(endDate)}`;
+  return (
+    <div key={idx} className="bg-neutral-950 border border-neutral-850 p-2 rounded-lg flex justify-between items-center text-[10px] font-mono">
+      <span className="text-neutral-300">{label}</span>
+      <span className="text-emerald-400 font-bold bg-emerald-500/10 px-1.5 py-0.5 rounded">{win.durationHours}h Free</span>
+    </div>
+  );
+})
                 )}
               </div>
             </div>

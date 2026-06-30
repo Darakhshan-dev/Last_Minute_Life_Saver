@@ -18,43 +18,71 @@ export default function TaskForm({ onAddTask, onClose }: TaskFormProps) {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    console.log("SUBMIT WORKING");
     setError(null);
 
+    console.log("Form values:", {
+      title,
+      description,
+      deadline,
+      estimatedHours,
+      category,
+      priority,
+    });
+
     if (!title.trim()) {
+      console.log("Validation failed: title missing");
       setError("Please provide a task title.");
       return;
     }
+
     if (!deadline) {
+      console.log("Validation failed: deadline missing");
       setError("Please specify a clear deadline.");
       return;
     }
+
     const hours = parseFloat(estimatedHours);
+
     if (isNaN(hours) || hours <= 0) {
+      console.log("Validation failed: invalid estimated hours");
       setError("Please specify a realistic estimated effort in hours.");
       return;
     }
 
-    onAddTask({
+    const taskPayload = {
       title,
       description,
       deadline,
       estimatedHours: hours,
       category,
       priority,
-    });
+    };
 
-    // Reset Form
-    setTitle("");
-    setDescription("");
-    setDeadline("");
-    setEstimatedHours("");
-    setCategory("Assignment");
-    setPriority("Medium");
+    console.log("Calling onAddTask with:", taskPayload);
+
+    try {
+      onAddTask(taskPayload);
+      console.log("onAddTask called successfully");
+
+      setTitle("");
+      setDescription("");
+      setDeadline("");
+      setEstimatedHours("");
+      setCategory("Assignment");
+      setPriority("Medium");
+    } catch (err) {
+      console.error("Error inside TaskForm onAddTask call:", err);
+      setError("Failed to add task. Check console for details.");
+    }
   };
 
   return (
     <div className="fixed inset-0 bg-neutral-950/80 backdrop-blur-sm flex justify-center items-center z-50 p-4">
-      <div id="add_task_modal" className="w-full max-w-lg bg-neutral-900 border border-neutral-800 rounded-2xl p-6 shadow-2xl relative animate-in fade-in zoom-in-95 duration-150">
+      <div
+        id="add_task_modal"
+        className="w-full max-w-lg bg-neutral-900 border border-neutral-800 rounded-2xl p-6 shadow-2xl relative animate-in fade-in zoom-in-95 duration-150"
+      >
         <button
           onClick={onClose}
           className="absolute top-4 right-4 text-neutral-400 hover:text-white transition duration-150"
@@ -178,7 +206,7 @@ export default function TaskForm({ onAddTask, onClose }: TaskFormProps) {
                           : p === "Medium"
                             ? "bg-amber-500/20 border-amber-500 text-amber-400"
                             : "bg-emerald-500/20 border-emerald-500 text-emerald-400"
-                        : "bg-neutral-950 border-neutral-800 text-neutral-400 hover:border-neutral-750"
+                        : "bg-neutral-950 border-neutral-800 text-neutral-400 hover:border-neutral-700"
                     }`}
                   >
                     {p}
