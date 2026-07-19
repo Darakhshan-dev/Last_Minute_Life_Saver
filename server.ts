@@ -4,6 +4,8 @@ import express from "express";
 import { createServer as createViteServer } from "vite";
 import appImport from "./backend/src/app";
 import { geminiService } from "./backend/src/services/geminiService";
+import "./backend/src/services/firebaseAdmin";
+import { startPushNotificationScheduler } from "./backend/src/services/pushNotificationService";
 
 // Handle ESM/CommonJS default export interoperability gracefully
 const app = (appImport as any).default || appImport;
@@ -106,6 +108,9 @@ async function startServer() {
       }).catch((checkError) => {
         logToFile(`Gemini API Startup Check: FAILED to run self check: ${checkError}`);
       });
+      startPushNotificationScheduler().catch((err) =>
+    console.error("[Push Scheduler] Failed to start:", err)
+  );
     });
   } catch (listenError) {
     logToFile(`CRITICAL ERROR on app.listen: ${listenError}`);

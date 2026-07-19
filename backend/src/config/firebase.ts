@@ -1,28 +1,53 @@
-import { initializeApp, getApps } from "firebase-admin/app";
+import { initializeApp, getApps, cert } from "firebase-admin/app";
 import { getFirestore } from "firebase-admin/firestore";
 import fs from "fs";
 import path from "path";
 
-// Dynamically resolve configuration from root directory
-const rootConfigPath = path.resolve(process.cwd(), "firebase-applet-config.json");
-let projectId = "gen-lang-client-0943848188";
-let databaseId = "ai-studio-dc36cd4b-c934-454c-a7b2-297a0f4b0647";
-
-try {
-  if (fs.existsSync(rootConfigPath)) {
-    const config = JSON.parse(fs.readFileSync(rootConfigPath, "utf-8"));
-    if (config.projectId) projectId = config.projectId;
-    if (config.databaseId) databaseId = config.databaseId;
-    if (config.firestoreDatabaseId) databaseId = config.firestoreDatabaseId;
-  }
-} catch (err) {
-  console.error("Error loading Firebase config:", err);
-}
-
 if (getApps().length === 0) {
-  initializeApp({
-    projectId: projectId,
-  });
+  // Try service account from env first, then fall back to JSON file
+  const serviceAccountJson = process.env.FIREBASE_SERVICE_ACCOUNT_JSON;
+  
+  if (serviceAccountJson) {
+    try {
+      const serviceAccount = JSON.parse(serviceAccountJson);
+      initializeApp({
+        credential: cert(serviceAccount),
+        projectId: "gen-lang-client-09438188",
+      });
+      console.log("[Firebase Config] Initialized with env service account.");
+    } catch (err) {
+      console.error("[Firebase Config] Failed to parse env service account:", err);
+    }
+  } else {
+    // Try to find the service account JSON file directly
+    const possiblePaths = [
+      path.resolve(process.cwd(), "service-account.json"),
+      path.resolve(process.cwd(), "backend", "service-account.json"),
+    ];
+    
+    let initialized = false;
+    for (const p of possiblePaths) {
+      if (fs.existsSync(p)) {
+        try {
+          const serviceAccount = JSON.parse(fs.readFileSync(p, "utf-8"));
+          initializeApp({
+            credential: cert(serviceAccount),
+            projectId: "gen-lang-client-09438188",
+          });
+          console.log("[Firebase Config] Initialized with file service account:", p);
+          initialized = true;
+          break;
+        } catch (err) {
+          console.error("[Firebase Config] Failed to load service account file:", err);
+        }
+      }
+    }
+    
+    if (!initialized) {
+      console.warn("[Firebase Config] No credentials found — Firestore will fail.");
+      initializeApp({ projectId: "gen-lang-client-09438188" });
+    }
+  }
 }
 
-export const db = getFirestore(databaseId);
+export const db = getFirestore();

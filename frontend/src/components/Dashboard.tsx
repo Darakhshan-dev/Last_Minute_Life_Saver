@@ -200,26 +200,26 @@ const fittingTasks = tasks.filter((t) => {
 
 // Deadline-aware notifications: alert the user when a task becomes
 // high-risk or overdue, based on Gemini's prioritization analysis.
-useEffect(() => {
-  if (!("Notification" in window) || Notification.permission !== "granted") return;
-  analysis.priorities.forEach((p) => {
-    const isRisky = p.riskStatus === "overdue" || p.riskStatus === "high_risk";
-    const lastNotifiedLevel = notifiedTaskRiskLevels[p.taskId];
-    const alreadyNotifiedAtThisLevel = lastNotifiedLevel === p.riskStatus;
+// useEffect(() => {
+//   if (!("Notification" in window) || Notification.permission !== "granted") return;
+//   analysis.priorities.forEach((p) => {
+//     const isRisky = p.riskStatus === "overdue" || p.riskStatus === "high_risk";
+//     const lastNotifiedLevel = notifiedTaskRiskLevels[p.taskId];
+//     const alreadyNotifiedAtThisLevel = lastNotifiedLevel === p.riskStatus;
 
-    if (isRisky && !alreadyNotifiedAtThisLevel) {
-      const task = tasks.find((t) => t.id === p.taskId);
-      if (task && !task.completed) {
-        const title =
-          p.riskStatus === "overdue" ? "Task overdue!" : "Deadline approaching!";
-        new Notification(title, {
-          body: `"${task.title}" — ${p.reason}`,
-        });
-        setNotifiedTaskRiskLevels((prev) => ({ ...prev, [p.taskId]: p.riskStatus }));
-      }
-    }
-  });
-}, [analysis, tasks, notifiedTaskRiskLevels]);
+//     if (isRisky && !alreadyNotifiedAtThisLevel) {
+//       const task = tasks.find((t) => t.id === p.taskId);
+//       if (task && !task.completed) {
+//         const title =
+//           p.riskStatus === "overdue" ? "Task overdue!" : "Deadline approaching!";
+//         new Notification(title, {
+//           body: `"${task.title}" — ${p.reason}`,
+//         });
+//         setNotifiedTaskRiskLevels((prev) => ({ ...prev, [p.taskId]: p.riskStatus }));
+//       }
+//     }
+//   });
+// }, [analysis, tasks, notifiedTaskRiskLevels]);
 
   // Auto-clear Toast
   useEffect(() => {

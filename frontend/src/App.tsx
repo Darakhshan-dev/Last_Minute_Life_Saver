@@ -3,9 +3,11 @@ import { AuthProvider, useAuth } from "./context/AuthContext";
 import SignIn from "./components/SignIn";
 import Dashboard from "./components/Dashboard";
 import { Flame } from "lucide-react";
+import { useFCMToken } from "./hooks/useFCMToken";
 
 function AppContent() {
   const { user, loading } = useAuth();
+  useFCMToken(user?.uid || null);
 
   if (loading) {
     return (
