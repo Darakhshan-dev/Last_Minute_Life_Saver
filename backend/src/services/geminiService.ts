@@ -103,7 +103,7 @@ function parseGeminiError(err: any): { code: number | string; status: string; me
     return {
       code: 404,
       status: "MODEL_NOT_FOUND",
-      message: "The free-tier model was not found. Please verify that gemini-2.5-flash is supported."
+      message: "The free-tier model was not found. Please verify that gemini-1.5-flash is supported."
     };
   }
 
@@ -121,7 +121,7 @@ export const geminiService = {
     return {
       apiKeyPresent: !!process.env.GEMINI_API_KEY,
       clientInitialized: isInitializedSuccessfully,
-      modelName: "gemini-2.5-flash",
+      modelName: "gemini-1.5-flash",
       lastErrorCode: lastErrorDetails.code,
       lastErrorType: lastErrorDetails.status,
       lastErrorMessage: lastErrorDetails.message,
@@ -154,7 +154,7 @@ export const geminiService = {
       
       // Perform a tiny, fast connectivity request to verify project access/key validity
       const response = await ai.models.generateContent({
-        model: "gemini-2.5-flash",
+        model: "gemini-1.5-flash",
         contents: "Hello, reply with only the word OK",
       });
 
@@ -246,7 +246,7 @@ export const geminiService = {
       `;
 
       const response = await getAIClient().models.generateContent({
-        model: "gemini-2.5-flash",
+        model: "gemini-1.5-flash",
         contents: prompt,
         config: {
           responseMimeType: "application/json",
@@ -403,7 +403,7 @@ export const geminiService = {
       `;
 
       const response = await getAIClient().models.generateContent({
-        model: "gemini-2.5-flash",
+        model: "gemini-1.5-flash",
         contents: prompt,
         config: {
           responseMimeType: "application/json",
@@ -526,7 +526,7 @@ export const geminiService = {
       `;
 
       const response = await getAIClient().models.generateContent({
-        model: "gemini-2.5-flash",
+        model: "gemini-1.5-flash",
         contents: prompt,
         config: {
           responseMimeType: "application/json",
@@ -627,7 +627,7 @@ export const geminiService = {
       `;
 
       const response = await getAIClient().models.generateContent({
-        model: "gemini-2.5-flash",
+        model: "gemini-1.5-flash",
         contents: prompt,
         config: {
           responseMimeType: "application/json",
