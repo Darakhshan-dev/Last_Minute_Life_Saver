@@ -1,9 +1,9 @@
-# 🔥 Last-Minute Life Saver
+# Last-Minute Life Saver
 
 > An AI-powered productivity companion that proactively helps students and professionals plan, prioritize, and complete tasks before deadlines are missed.
 
 
-## 🚀 The Problem
+## The Problem
 
 Students, professionals, and entrepreneurs frequently miss deadlines, assignments, meetings, bill payments, interviews, and important commitments. Existing productivity tools rely on **passive reminders that are easy to ignore** and do little to help users actually complete their tasks.
 
@@ -46,18 +46,6 @@ Last-Minute Life Saver moves beyond traditional reminders by using **Google Gemi
 - Incorporates real Google Calendar events as busy blocks
 - Includes focus sessions, breaks, and buffer time
 - Updates on demand with a single click
-
-### 📈 Analytics & Insights
-- 7-day task completion trend chart
-- Pending, completed, and high-risk task counters
-- AI-generated personalized productivity insights
-- Real-time risk warnings with actionable guidance
-
-### 🔒 Secure by Design
-- Firebase Authentication with Google Sign-In
-- Firestore security rules: users can only access their own data
-- Service account credentials never exposed to the frontend
-- Environment-based configuration for all secrets
 
 ---
 
@@ -180,9 +168,3 @@ Last-Minute-Life-Saver/
 | Notifications | Risk classifications drive when notifications fire |
 
 ---
-
-## 👩‍💻 Author
-
-**Darakhshan Ifraque**
-- GitHub: [@Darakhshan-dev](https://github.com/Darakhshan-dev)
-- Email: darakhshanifraque@gmail.com
