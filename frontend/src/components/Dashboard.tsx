@@ -378,7 +378,7 @@ useEffect(() => {
         setAnalyzing(false);
       }
     })();
-}, 60 * 1000);
+},10 * 60 * 1000);
 
   return () => clearInterval(periodicCheck);
 }, [tasks]);
