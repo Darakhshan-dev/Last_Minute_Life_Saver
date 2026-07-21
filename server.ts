@@ -98,16 +98,17 @@ async function startServer() {
     app.listen(PORT, "0.0.0.0", () => {
       logToFile(`Express server successfully listening on http://0.0.0.0:${PORT}`);
       
-      // Run asynchronous Gemini configuration self-check on startup
-      geminiService.runStartupSelfCheck().then((result) => {
-        if (result.success) {
-          logToFile("Gemini API Startup Check: Connection is active and healthy.");
-        } else {
-          logToFile(`Gemini API Startup Check: WARNING - Fallback active. Error: ${result.error}`);
-        }
-      }).catch((checkError) => {
-        logToFile(`Gemini API Startup Check: FAILED to run self check: ${checkError}`);
-      });
+      if (process.env.NODE_ENV !== "production") {
+  geminiService.runStartupSelfCheck().then((result) => {
+    if (result.success) {
+      logToFile("Gemini API Startup Check: Connection is active and healthy.");
+    } else {
+      logToFile(`Gemini API Startup Check: WARNING - Fallback active. Error: ${result.error}`);
+    }
+  }).catch((checkError) => {
+    logToFile(`Gemini API Startup Check: FAILED to run self check: ${checkError}`);
+  });
+}
       startPushNotificationScheduler().catch((err) =>
     console.error("[Push Scheduler] Failed to start:", err)
   );
